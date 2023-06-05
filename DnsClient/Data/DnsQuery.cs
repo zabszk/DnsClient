@@ -1,7 +1,7 @@
 ﻿using System;
 using DnsClient.Enums;
 
-namespace DnsClient.Structs
+namespace DnsClient.Data
 {
 	public class DnsQuery
 	{

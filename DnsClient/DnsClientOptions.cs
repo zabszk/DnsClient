@@ -1,4 +1,5 @@
 ﻿using System;
+using DnsClient.Logging;
 
 namespace DnsClient
 {
@@ -31,13 +32,11 @@ namespace DnsClient
 		}
 
 		public uint Timeout = 250;
+		public IErrorLogging? ErrorLogging = null;
 
 		private int _timeoutInnerDelay = 25;
 		private ushort _maxAttempts = 5;
 
-		public DnsClientOptions()
-		{
-
-		}
+		public DnsClientOptions() { }
 	}
 }

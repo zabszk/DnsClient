@@ -1,39 +1,38 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using DnsClient.Enums;
 
-namespace DnsClient.Structs
+namespace DnsClient.Data
 {
 	internal class DnsQueryStatus
 	{
-		internal Status State = Status.InProgress;
+		internal bool IsComplete;
 
-		internal bool IsComplete => State != Status.InProgress;
-
-		internal CancellationTokenSource? CtSource = new();
-		internal DnsResponse? Response = null;
+		internal DnsResponse? Response;
 
 		private readonly DnsClient _client;
+		private readonly CancellationTokenSource? _ctSource = new();
 
 		internal DnsQueryStatus(DnsClient client) => _client = client;
 
-		internal void Abort(bool success)
+		internal void Abort(DnsErrorCode errorCode)
 		{
 			if (IsComplete)
 				return;
 
-			State = success ? Status.Completed : Status.Failed;
-			CtSource?.Cancel();
+			IsComplete = true;
+			Response = new DnsResponse(errorCode);
+			_ctSource?.Cancel();
 		}
 
 		internal async Task<bool> Wait()
 		{
-			if (CtSource == null)
+			if (_ctSource == null)
 				return false;
 
 			try
 			{
-				CancellationToken ct = CtSource.Token;
+				CancellationToken ct = _ctSource.Token;
 				int timeWaited = 0;
 
 				while (!IsComplete && !ct.IsCancellationRequested)
@@ -51,13 +50,6 @@ namespace DnsClient.Structs
 				//Ignore
 				return false;
 			}
-		}
-
-		internal enum Status
-		{
-			InProgress,
-			Completed,
-			Failed
 		}
 	}
 }
