@@ -3,14 +3,19 @@ using System.Net;
 
 namespace DnsClient.Data.Records;
 
-public struct ARecord
+public interface IDNSRecord
+{
+	uint TTL { get; set; }
+}
+
+public struct ARecord : IDNSRecord
 {
 	public IPAddress Address;
-	public uint TTL;
+	public uint TTL { get; set; }
 
-	internal ARecord Parse(ArraySegment<byte> data)
+	internal static ARecord Parse(ArraySegment<byte> data)
 	{
-		return new ARecord()
+		return new ARecord
 		{
 			TTL = BitConverter.ToUInt32(data),
 			Address = new IPAddress(data.Slice(6, BitConverter.ToInt32(data[4..])))
@@ -18,14 +23,14 @@ public struct ARecord
 	}
 }
 
-public struct AAAARecord
+public struct AAAARecord : IDNSRecord
 {
 	public IPAddress Address;
-	public uint TTL;
+	public uint TTL { get; set; }
 
-	internal AAAARecord Parse(ArraySegment<byte> data)
+	internal static AAAARecord Parse(ArraySegment<byte> data)
 	{
-		return new AAAARecord()
+		return new AAAARecord
 		{
 			TTL = BitConverter.ToUInt32(data),
 			Address = new IPAddress(data.Slice(6, BitConverter.ToInt32(data[4..])))
