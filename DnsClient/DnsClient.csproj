@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <LangVersion>9</LangVersion>
+    <LangVersion>10</LangVersion>
     <Nullable>enable</Nullable>
     <Authors>Łukasz Jurczyk</Authors>
     <Copyright>Copyright (c) 2023 Łukasz Jurczyk</Copyright>

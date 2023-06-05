@@ -2,18 +2,42 @@
 
 namespace DnsClient
 {
-	public class DnsClientOptions
+	public struct DnsClientOptions
 	{
-		public readonly ushort MaxAtempts;
-		public readonly uint Timeout;
-
-		public DnsClientOptions(ushort maxAttempts = 5, uint timeout = 250)
+		public ushort MaxAtempts
 		{
-			if (maxAttempts == 0)
-				throw new ArgumentException("maxAttempts must be greater than 0.", nameof(maxAttempts));
+			get => _maxAttempts;
 
-			MaxAtempts = maxAttempts;
-			Timeout = timeout;
+			set
+			{
+				if (value == 0)
+					throw new ArgumentException("maxAttempts must be greater than 0.", nameof(value));
+
+				_maxAttempts = value;
+			}
+		}
+
+		public int TimeoutInnerDelay
+		{
+			get => _timeoutInnerDelay;
+
+			set
+			{
+				if (value <= 0)
+					throw new ArgumentException("maxAttempts must be greater than 0.", nameof(value));
+
+				_timeoutInnerDelay = value;
+			}
+		}
+
+		public uint Timeout = 250;
+
+		private int _timeoutInnerDelay = 25;
+		private ushort _maxAttempts = 5;
+
+		public DnsClientOptions()
+		{
+
 		}
 	}
 }
