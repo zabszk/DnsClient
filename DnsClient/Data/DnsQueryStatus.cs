@@ -42,11 +42,11 @@ namespace DnsClient.Data
 				int i = 12;
 
 				//Ignore queries
-				for (; i < recv; i++)
+				while (i < recv - 1)
 					if (buffer[i++] == 0)
 						break;
 
-				i += 3; //Ignore query type and class
+				i += 4; //Ignore query type and class
 				ushort processed = 0;
 
 				Response = new DnsResponse(DnsErrorCode.NoError, new());
@@ -83,7 +83,7 @@ namespace DnsClient.Data
 
 					DnsRecord.DNSRecord? record = DnsRecord.Parse(type, new ArraySegment<byte>(buffer, i, length), ttl);
 					if (record != null)
-						Response.Records.Add(record);
+						Response.Records!.Add(record);
 
 					i += length;
 					processed++;
