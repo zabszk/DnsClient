@@ -14,7 +14,7 @@ namespace DnsClient.Data
 		internal DnsResponse? Response;
 
 		private readonly DnsClient _client;
-		private readonly CancellationTokenSource? _ctSource = new();
+		private readonly CancellationTokenSource _ctSource = new();
 
 		internal DnsQueryStatus(DnsClient client) => _client = client;
 
@@ -107,7 +107,7 @@ namespace DnsClient.Data
 				return;
 
 			IsComplete = true;
-			_ctSource?.Cancel();
+			_ctSource.Cancel();
 		}
 
 		internal void Abort(DnsErrorCode errorCode)
@@ -117,14 +117,11 @@ namespace DnsClient.Data
 
 			IsComplete = true;
 			Response = new DnsResponse(errorCode);
-			_ctSource?.Cancel();
+			_ctSource.Cancel();
 		}
 
 		internal async Task<bool> Wait()
 		{
-			if (_ctSource == null)
-				return false;
-
 			try
 			{
 				CancellationToken ct = _ctSource.Token;
@@ -143,7 +140,7 @@ namespace DnsClient.Data
 			catch (TaskCanceledException)
 			{
 				//Ignore
-				return false;
+				return true;
 			}
 		}
 	}
