@@ -7,11 +7,12 @@ namespace DnsClient.Data
 	public class DnsResponse
 	{
 		public readonly DnsErrorCode ErrorCode;
-		public List<DnsRecord.DNSRecord> Records;
+		public readonly List<DnsRecord.DNSRecord>? Records;
 
-		public DnsResponse(DnsErrorCode errorCode)
+		internal DnsResponse(DnsErrorCode errorCode, List<DnsRecord.DNSRecord>? records = null)
 		{
 			ErrorCode = errorCode;
+			Records = records;
 		}
 	}
 }

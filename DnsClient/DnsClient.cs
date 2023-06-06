@@ -135,7 +135,7 @@ namespace DnsClient
 
 						query.Parse(buffer, recv);
 					}
-					catch (TaskCanceledException)
+					catch (OperationCanceledException)
 					{
 						break;
 					}

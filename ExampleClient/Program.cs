@@ -35,10 +35,16 @@ while (true)
 	DnsResponse response = await dns.Query(new DnsQuery(domain, (QType)QType));
 
 	Console.WriteLine($"Query result: {response.ErrorCode}");
-	Console.WriteLine($"Records found: {response.Records.Count}");
 
-	foreach (var record in response.Records)
-		Console.WriteLine(" - " + record);
+	if (response.Records == null)
+		Console.WriteLine("No records found");
+	else
+	{
+		Console.WriteLine($"Records found: {response.Records.Count}");
+
+		foreach (var record in response.Records)
+			Console.WriteLine(" - " + record);
+	}
 
 	Console.WriteLine();
 }

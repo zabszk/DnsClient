@@ -49,10 +49,7 @@ namespace DnsClient.Data
 				i += 3; //Ignore query type and class
 				ushort processed = 0;
 
-				Response = new DnsResponse(DnsErrorCode.NoError)
-				{
-					Records = new()
-				};
+				Response = new DnsResponse(DnsErrorCode.NoError, new());
 
 				while (i < recv && processed < answers)
 				{
@@ -137,7 +134,7 @@ namespace DnsClient.Data
 
 				return true;
 			}
-			catch (TaskCanceledException)
+			catch (OperationCanceledException)
 			{
 				//Ignore
 				return true;
