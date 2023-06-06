@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
@@ -70,7 +71,7 @@ namespace DnsClient
 		}
 		#endregion
 
-		public async Task<DnsResponse?> Query(DnsQuery query)
+		public async Task<DnsResponse> Query(DnsQuery query)
 		{
 			byte[] buffer = ArrayPool<byte>.Shared.Rent(query.QueryLength);
 			ushort transactionId = AssignTransactionId();
@@ -90,8 +91,9 @@ namespace DnsClient
 
 			ArrayPool<byte>.Shared.Return(buffer);
 			_transactions.TryRemove(transactionId, out _);
+			status.Abort(DnsErrorCode.NoResponseFromServer);
 
-			return status.Response;
+			return status.Response!;
 		}
 
 		#region Receiving
@@ -99,67 +101,57 @@ namespace DnsClient
 		private async void ReceiveLoop()
 		{
 			byte[] buffer = ArrayPool<byte>.Shared.Rent(512);
-			CancellationToken ct = _ctSource.Token;
-
-			while (!ct.IsCancellationRequested)
+			try
 			{
-				try
+				CancellationToken ct = _ctSource.Token;
+
+				while (!ct.IsCancellationRequested)
 				{
-					var recv = await _socket.ReceiveAsync(buffer, SocketFlags.None, ct);
-
-					if (ct.IsCancellationRequested)
-						break;
-
-					if (recv <= 0)
-						continue;
-
-					if (recv < 12)
+					try
 					{
-						Options.ErrorLogging?.LogError("Received a malformed UDP response (too short).");
-						continue;
-					}
+						var recv = await _socket.ReceiveAsync(buffer, SocketFlags.None, ct);
 
-					if ((buffer[2] & 0x80) == 0) //Received a query, not a response
-						continue;
-
-					ushort transactionId = BitConverter.ToUInt16(buffer, 0);
-
-					if (!_transactions.TryGetValue(transactionId, out DnsQueryStatus query) || query.IsComplete)
-						continue;
-
-					byte errorCode = (byte)(buffer[3] & 0x0F);
-					if (errorCode != 0) //Error returned
-					{
-						query.Abort((DnsErrorCode)errorCode);
-						continue;
-					}
-
-					if (buffer[4] != 0 || buffer[5] != 1)
-					{
-						query.Abort(DnsErrorCode.CantParseResponse);
-						continue;
-					}
-
-					ushort answers = BitConverter.ToUInt16(buffer, 6);
-					int responseStart = 12;
-
-					//Ignore queries
-					for (; responseStart < recv; responseStart++)
-						if (buffer[responseStart++] == 0)
+						if (ct.IsCancellationRequested)
 							break;
 
-					responseStart += 4; //Ignore query type and class
+						if (recv <= 0)
+							continue;
 
-					//TODO Parse response
+						if (recv < 12)
+						{
+							Options.ErrorLogging?.LogError("Received a malformed UDP response (too short).");
+							continue;
+						}
+
+						if ((buffer[2] & 0x80) == 0) //Received a query, not a response
+							continue;
+
+						ushort transactionId = BitConverter.ToUInt16(buffer, 0);
+						if (BitConverter.IsLittleEndian)
+							transactionId = BinaryPrimitives.ReverseEndianness(transactionId);
+
+						if (!_transactions.TryRemove(transactionId, out DnsQueryStatus query) || query.IsComplete)
+							continue;
+
+						query.Parse(buffer, recv);
+					}
+					catch (TaskCanceledException)
+					{
+						break;
+					}
+					catch (Exception e)
+					{
+						Options.ErrorLogging?.LogException("Failed to receive data!", e);
+					}
 				}
-				catch (TaskCanceledException)
-				{
-					break;
-				}
-				catch (Exception e)
-				{
-					Options.ErrorLogging?.LogException("Failed to receive data!", e);
-				}
+			}
+			catch (Exception e)
+			{
+				Options.ErrorLogging?.LogException("Exception in receive loop!", e);
+			}
+			finally
+			{
+				ArrayPool<byte>.Shared.Return(buffer);
 			}
 		}
 		#endregion

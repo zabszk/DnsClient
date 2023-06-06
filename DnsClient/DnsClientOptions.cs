@@ -31,10 +31,10 @@ namespace DnsClient
 			}
 		}
 
-		public uint Timeout = 250;
+		public uint Timeout = 500;
 		public IErrorLogging? ErrorLogging = null;
 
-		private int _timeoutInnerDelay = 25;
+		private int _timeoutInnerDelay = 50;
 		private ushort _maxAttempts = 5;
 
 		public DnsClientOptions() { }
