@@ -162,12 +162,12 @@ namespace DnsClient
 			lock (_transactionIdLock)
 			{
 				return _transactionId < ushort.MaxValue
-					? AbortTransactionIfExists(_transactionId++, false)
-					: AbortTransactionIfExists(_transactionId = 0, false);
+					? AbortTransactionIfExists(_transactionId++)
+					: AbortTransactionIfExists(_transactionId = 0);
 			}
 		}
 
-		private ushort AbortTransactionIfExists(ushort transactionId, bool success)
+		private ushort AbortTransactionIfExists(ushort transactionId)
 		{
 			if (!_transactions.ContainsKey(transactionId) || !_transactions.TryRemove(transactionId, out var dnsQueryStatus))
 				return transactionId;
