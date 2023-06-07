@@ -7,6 +7,11 @@
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <Authors>Łukasz Jurczyk</Authors>
+        <LangVersion>10</LangVersion>
+        <Copyright>Copyright (c) 2023 Łukasz Jurczyk</Copyright>
+        <PackageLicenseUrl>https://raw.githubusercontent.com/zabszk/DnsClient/master/LICENSE</PackageLicenseUrl>
+        <PackageProjectUrl>https://github.com/zabszk/DnsClient</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/zabszk/DnsClient</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>

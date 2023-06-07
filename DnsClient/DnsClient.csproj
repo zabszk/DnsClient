@@ -7,7 +7,7 @@
     <Authors>Łukasz Jurczyk</Authors>
     <Copyright>Copyright (c) 2023 Łukasz Jurczyk</Copyright>
     <PackageProjectUrl>https://github.com/zabszk/DnsClient</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/zabszk/DnsClient/LICENSE</PackageLicenseUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/zabszk/DnsClient/master/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/zabszk/DnsClient</RepositoryUrl>
   </PropertyGroup>
 
