@@ -1,6 +1,8 @@
 # DnsClient
 A DNS Client library for C#.
 
+DNS Client class provided by this library is thread-safe.
+
 # Supported DNS records types
  * A
  * AAAA
