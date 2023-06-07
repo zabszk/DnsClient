@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 
 namespace DnsClient.Misc;
 
-internal static class Misc
+public static class Misc
 {
+	#region Domain parsing
 	internal static string ParseDomain(ArraySegment<byte> data, int startIndex, out int read, byte[] rawResponse)
 	{
 		string domain = string.Empty;
@@ -67,4 +71,37 @@ internal static class Misc
 		read -= startIndex;
 		return domain;
 	}
+	#endregion
+
+	#region PTR
+	public static string GetPtrAddress(string address) => GetPtrAddress(IPAddress.Parse(address));
+
+	public static bool TryGetPtrAddress(string address, out string? ptrAddress)
+	{
+		if (IPAddress.TryParse(address, out var ptr))
+		{
+			ptrAddress = GetPtrAddress(ptr);
+			return true;
+		}
+
+		ptrAddress = null;
+		return false;
+	}
+
+	public static string GetPtrAddress(IPAddress address)
+	{
+		switch (address.AddressFamily)
+		{
+			case AddressFamily.InterNetwork:
+				return string.Join('.', address.ToString().Split(".").Reverse()) + ".in-addr.arpa";
+
+			case AddressFamily.InterNetworkV6:
+				return "";
+				break;
+
+			default:
+				throw new NotSupportedException();
+		}
+	}
+	#endregion
 }

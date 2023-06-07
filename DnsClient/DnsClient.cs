@@ -71,6 +71,7 @@ namespace DnsClient
 		}
 		#endregion
 
+		#region Querying
 		public async Task<DnsResponse> Query(string domain, QType qType) => await Query(new DnsQuery(domain, qType));
 
 		public async Task<DnsResponse> Query(DnsQuery query)
@@ -98,8 +99,12 @@ namespace DnsClient
 			return status.Response!;
 		}
 
-		#region Receiving
+		public async Task<DnsResponse> QueryReverseDNS(string address) => await Query(Misc.Misc.GetPtrAddress(address), QType.PTR);
 
+		public async Task<DnsResponse> QueryReverseDNS(IPAddress address) => await Query(Misc.Misc.GetPtrAddress(address), QType.PTR);
+		#endregion
+
+		#region Receiving
 		private async void ReceiveLoop()
 		{
 			byte[] buffer = ArrayPool<byte>.Shared.Rent(512);
@@ -179,6 +184,7 @@ namespace DnsClient
 		}
 		#endregion
 
+		#region Disposal
 		public void Dispose()
 		{
 			GC.SuppressFinalize(this);
@@ -187,5 +193,6 @@ namespace DnsClient
 		}
 
 		~DnsClient() => Dispose();
+		#endregion
 	}
 }

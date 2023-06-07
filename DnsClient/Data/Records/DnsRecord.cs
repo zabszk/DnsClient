@@ -23,7 +23,7 @@ public static class DnsRecord
 				break;
 
 			case QType.PTR:
-				break;
+				return PTRRecord.Parse(data, ttl, rawResponse);
 
 			case QType.MX:
 				return MXRecord.Parse(data, ttl, rawResponse);
@@ -98,6 +98,19 @@ public static class DnsRecord
 		internal static CNAMERecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new (ttl, Misc.Misc.ParseDomain(data, 0, out _, raw));
 
 		public override string ToString() => $"CNAME: {Alias}";
+	}
+
+	public class PTRRecord : DNSRecord
+	{
+		public readonly string DomainName;
+
+		public QType Type => QType.PTR;
+
+		private PTRRecord(uint ttl, string alias) : base(ttl) => DomainName = alias;
+
+		internal static PTRRecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new (ttl, Misc.Misc.ParseDomain(data, 0, out _, raw));
+
+		public override string ToString() => $"PTR: {DomainName}";
 	}
 
 	public class MXRecord : DNSRecord

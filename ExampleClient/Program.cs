@@ -2,6 +2,7 @@
 using DnsClient.Data;
 using DnsClient.Enums;
 using DnsClient.Logging;
+using DnsClient.Misc;
 
 using DnsClient.DnsClient dns = new("1.1.1.1", options: new DnsClientOptions
 {
@@ -30,9 +31,15 @@ while (true)
 		continue;
 	}
 
-	var sp = type!.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+	var sp = type!.ToUpperInvariant().Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 	QType[] types = new QType[sp.Length];
 	int lastType = 0;
+
+	if (sp.Length == 1 && sp.Contains("PTR") && Misc.TryGetPtrAddress(domain, out var ptrAddress))
+	{
+		domain = ptrAddress;
+		Console.WriteLine($"Changed queried domain to: {domain}");
+	}
 
 	foreach (var s in sp)
 	{
