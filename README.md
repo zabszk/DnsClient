@@ -1,7 +1,7 @@
 # DnsClient
 A DNS Client library for C#.
 
-# Supported DNS record Types
+# Supported DNS records types
  * A
  * AAAA
  * CNAME
