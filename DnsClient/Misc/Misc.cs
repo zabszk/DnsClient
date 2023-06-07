@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Buffers;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 namespace DnsClient.Misc;
 
@@ -96,8 +98,29 @@ public static class Misc
 				return string.Join('.', address.ToString().Split(".").Reverse()) + ".in-addr.arpa";
 
 			case AddressFamily.InterNetworkV6:
-				return "";
-				break;
+				byte[] addr = ArrayPool<byte>.Shared.Rent(16);
+
+				try
+				{
+					if (!address.TryWriteBytes(addr, out int written) || written != 16)
+						throw new Exception("Can't parse IPv6 address");
+
+					string str = BitConverter.ToString(addr).Replace("-", string.Empty).ToLowerInvariant();
+					StringBuilder sb = new(72);
+
+					for (int i = str.Length - 1; i >= 0; i--)
+					{
+						sb.Append(str[i]);
+						sb.Append('.');
+					}
+
+					sb.Append("ip6.arpa");
+					return sb.ToString();
+				}
+				finally
+				{
+					ArrayPool<byte>.Shared.Return(addr);
+				}
 
 			default:
 				throw new NotSupportedException();
