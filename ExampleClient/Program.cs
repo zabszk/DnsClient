@@ -24,15 +24,30 @@ while (true)
 
 	Console.Write("Record type: ");
 	var type = Console.ReadLine();
-	if (string.IsNullOrWhiteSpace(domain) || !Enum.TryParse(typeof(QType), type, true, out var QType))
+	if (string.IsNullOrWhiteSpace(domain))
 	{
-		Console.WriteLine("Invalid record type!");
 		Console.WriteLine();
 		continue;
 	}
 
+	var sp = type!.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+	QType[] types = new QType[sp.Length];
+	int lastType = 0;
+
+	foreach (var s in sp)
+	{
+		if (!Enum.TryParse(typeof(QType), s, true, out var QType))
+		{
+			Console.WriteLine($"Invalid record type {s}!");
+			Console.WriteLine();
+			continue;
+		}
+
+		types[lastType++] = (QType)QType;
+	}
+
 	Console.WriteLine("Querying 1.1.1.1...");
-	DnsResponse response = await dns.Query(new DnsQuery(domain, (QType)QType));
+	DnsResponse response = await dns.Query(new DnsQuery(domain, types));
 
 	Console.WriteLine($"Query result: {response.ErrorCode}");
 

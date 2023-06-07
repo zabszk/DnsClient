@@ -8,12 +8,20 @@ namespace DnsClient.Data
 		internal readonly int QueryLength = 17; //12 + 1 + 2 + 2 => header + null after the domain + query type + query class
 
 		private readonly string[] _domain;
-		private readonly QType _type;
+		private readonly QType[] _type;
 
-		public DnsQuery(string name, QType type)
+		public DnsQuery(string name, QType type) : this(name, new[] {type}) { }
+
+		public DnsQuery(string name, QType[] type)
 		{
 			if (string.IsNullOrWhiteSpace(name))
 				throw new ArgumentException("Name can't be null or whitespace.", nameof(name));
+
+			if (type == null || type.Length == 0)
+				throw new ArgumentException("Type can't be null or empty.", nameof(type));
+
+			if (type.Length > 255)
+				throw new ArgumentException("Too big array of types", nameof(type));
 
 			_type = type;
 
@@ -21,6 +29,8 @@ namespace DnsClient.Data
 
 			foreach (var d in _domain)
 				QueryLength += DnsClient.Encoding.GetByteCount(d) + 1;
+
+			QueryLength += (_type.Length - 1) * 6; //Pointer + query type + query class
 		}
 
 		internal void BuildQuery(byte[] buffer, ushort transactionId)
@@ -38,7 +48,7 @@ namespace DnsClient.Data
 
 			//Amount of questions
 			buffer[4] = 0;
-			buffer[5] = 1;
+			buffer[5] = (byte)_type.Length;
 
 			//Amount of answers RRs
 			buffer[6] = 0;
@@ -53,6 +63,7 @@ namespace DnsClient.Data
 			buffer[11] = 0;
 
 			int b = 12;
+			bool insertPointer = false;
 
 			foreach (var d in _domain)
 			{
@@ -65,13 +76,23 @@ namespace DnsClient.Data
 			//String terminator
 			buffer[b++] = 0;
 
-			//Query type
-			buffer[b++] = (byte)(((ushort)_type) >> 8);
-			buffer[b++] = (byte)_type;
+			foreach (var t in _type)
+			{
+				if (insertPointer)
+				{
+					buffer[b++] = 0xc0;
+					buffer[b++] = 12;
+				}
+				else insertPointer = true;
 
-			//Query class (IN)
-			buffer[b++] = 0;
-			buffer[b] = 1;
+				//Query type
+				buffer[b++] = (byte)(((ushort)t) >> 8);
+				buffer[b++] = (byte)t;
+
+				//Query class (IN)
+				buffer[b++] = 0;
+				buffer[b++] = 1;
+			}
 		}
 	}
 }

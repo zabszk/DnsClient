@@ -32,6 +32,7 @@ internal static class Misc
 		}
 
 		read++;
+		read -= startIndex;
 		return domain;
 	}
 
@@ -63,6 +64,7 @@ internal static class Misc
 		}
 
 		read++;
+		read -= startIndex;
 		return domain;
 	}
 }

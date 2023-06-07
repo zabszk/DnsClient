@@ -29,7 +29,7 @@ namespace DnsClient.Data
 					return;
 				}
 
-				if (buffer[4] != 0 || buffer[5] != 1)
+				if (buffer[4] != 0 || buffer[5] == 0)
 				{
 					Abort(DnsErrorCode.CantParseResponse);
 					return;
@@ -42,11 +42,13 @@ namespace DnsClient.Data
 				int i = 12;
 
 				//Ignore queries
-				while (i < recv - 1)
-					if (buffer[i++] == 0)
-						break;
+				for (byte j = 0; j < buffer[5]; j++)
+				{
+					Misc.Misc.ParseDomain(buffer, i, out int read, buffer);
+					i += read;
+					i += 4; //Ignore query type and class
+				}
 
-				i += 4; //Ignore query type and class
 				ushort processed = 0;
 
 				Response = new DnsResponse(DnsErrorCode.NoError, new());
@@ -58,7 +60,8 @@ namespace DnsClient.Data
 					if (remaining < 10)
 						break;
 
-					i += 2; //Skip query ID
+					Misc.Misc.ParseDomain(buffer, i, out int read, buffer); //Skip query ID
+					i += read;
 
 					QType type = (QType)BitConverter.ToUInt16(buffer, i);
 					if (BitConverter.IsLittleEndian)
