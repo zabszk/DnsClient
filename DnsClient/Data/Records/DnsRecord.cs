@@ -20,7 +20,7 @@ public static class DnsRecord
 				return CNAMERecord.Parse(data, ttl, rawResponse);
 
 			case QType.SOA:
-				break;
+				return SOARecord.Parse(data, ttl, rawResponse);
 
 			case QType.PTR:
 				return PTRRecord.Parse(data, ttl, rawResponse);
@@ -35,13 +35,11 @@ public static class DnsRecord
 				return AAAARecord.Parse(data, ttl);
 
 			case QType.SRV:
-				break;
+				return SRVRecord.Parse(data, ttl, rawResponse);
 
 			default:
 				return new UnknownRecord(ttl);
 		}
-
-		return null;
 	}
 
 	public abstract class DNSRecord
@@ -100,6 +98,61 @@ public static class DnsRecord
 		public override string ToString() => $"CNAME: {Alias}";
 	}
 
+	public class SOARecord : DNSRecord
+	{
+		public readonly string PrimaryNameServer;
+
+		public readonly string ResponsibleAuthorityMailbox;
+
+		public readonly uint SerialNumber;
+
+		public readonly uint RefreshInterval;
+
+		public readonly uint RetryInterval;
+
+		public readonly uint ExpireLimit;
+
+		public readonly uint MinimumTTL;
+
+		public QType Type => QType.SOA;
+
+		private SOARecord(uint ttl, string primaryNameServer, string responsibleAuthorityMailbox, uint serialNumber, uint refreshInterval, uint retryInterval, uint expireLimit, uint minimumTTL) : base(ttl)
+		{
+			PrimaryNameServer = primaryNameServer;
+			ResponsibleAuthorityMailbox = responsibleAuthorityMailbox;
+			SerialNumber = serialNumber;
+			RefreshInterval = refreshInterval;
+			RetryInterval = retryInterval;
+			ExpireLimit = expireLimit;
+			MinimumTTL = minimumTTL;
+		}
+
+		internal static SOARecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw)
+		{
+			string pns = Misc.Misc.ParseDomain(data, 0, out var index, raw);
+			string ram = Misc.Misc.ParseDomain(data, index, out var read, raw);
+			read += index;
+
+			uint sn = (uint)((data[read] << 24) | (data[read + 1] << 16) | (data[read + 2] << 8) | (data[read + 3]));
+			read += 4;
+
+			uint refI = (uint)((data[read] << 24) | (data[read + 1] << 16) | (data[read + 2] << 8) | (data[read + 3]));
+			read += 4;
+
+			uint retI = (uint)((data[read] << 24) | (data[read + 1] << 16) | (data[read + 2] << 8) | (data[read + 3]));
+			read += 4;
+
+			uint expLim = (uint)((data[read] << 24) | (data[read + 1] << 16) | (data[read + 2] << 8) | (data[read + 3]));
+			read += 4;
+
+			uint minTTL = (uint)((data[read] << 24) | (data[read + 1] << 16) | (data[read + 2] << 8) | (data[read + 3]));
+
+			return new SOARecord(ttl, pns, ram, sn, refI, retI, expLim, minTTL);
+		}
+
+		public override string ToString() => $"SOA: {Environment.NewLine}Primary New Server: {PrimaryNameServer}{Environment.NewLine}Responsible Authority Mailbox: {ResponsibleAuthorityMailbox}{Environment.NewLine}Serial Number: {SerialNumber}{Environment.NewLine}Refresh Interval: {RefreshInterval}{Environment.NewLine}Retry Interval: {RetryInterval}{Environment.NewLine}Expire Limit: {ExpireLimit}{Environment.NewLine}Minimum TTL: {MinimumTTL}";
+	}
+
 	public class NSRecord : DNSRecord
 	{
 		public readonly string NameServer;
@@ -156,5 +209,30 @@ public static class DnsRecord
 		internal static TXTRecord? Parse(ArraySegment<byte> data, uint ttl) => data[0] != data.Count - 1 ? null : new TXTRecord(ttl, DnsClient.Encoding.GetString(data[1..]));
 
 		public override string ToString() => $"TXT: {Text}";
+	}
+
+	public class SRVRecord : DNSRecord
+	{
+		public readonly ushort Priority;
+
+		public readonly ushort Weight;
+
+		public readonly ushort Port;
+
+		public readonly string Target;
+
+		public QType Type => QType.SRV;
+
+		private SRVRecord(uint ttl, ushort priority, ushort weight, ushort port, string target) : base(ttl)
+		{
+			Priority = priority;
+			Weight = weight;
+			Port = port;
+			Target = target;
+		}
+
+		internal static SRVRecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new SRVRecord(ttl, (ushort)((data[0] << 8) | data[1]), (ushort)((data[2] << 8) | data[3]), (ushort)((data[4] << 8) | data[5]), Misc.Misc.ParseDomain(data, 6, out _, raw));
+
+		public override string ToString() => $"SRV: {Target} (Priority: {Priority}, Weight: {Weight}, Port: {Port})";
 	}
 }
