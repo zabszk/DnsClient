@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>10</LangVersion>
+        <IsPackable>false</IsPackable>
+        <Authors>Łukasz Jurczyk</Authors>
+        <Copyright>Copyright (c) 2023 Łukasz Jurczyk</Copyright>
+        <PackageProjectUrl>https://github.com/zabszk/DnsClient</PackageProjectUrl>
+        <PackageLicenseUrl>https://raw.githubusercontent.com/zabszk/DnsClient/master/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/zabszk/DnsClient</RepositoryUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DnsClient\DnsClient.csproj" />
+    </ItemGroup>
+
+</Project>
