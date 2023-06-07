@@ -11,6 +11,9 @@
 		MX = 15,
 		TXT = 16,
 		AAAA = 28,
-		SRV = 33
+		SRV = 33,
+		DS = 43,
+		DNSKEY = 48,
+		CAA = 257
 	}
 }

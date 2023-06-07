@@ -37,6 +37,15 @@ public static class DnsRecord
 			case QType.SRV:
 				return SRVRecord.Parse(data, ttl, rawResponse);
 
+			case QType.DS:
+				return DSRecord.Parse(data, ttl);
+
+			case QType.DNSKEY:
+				return DNSKEYRecord.Parse(data, ttl);
+
+			case QType.CAA:
+				return CAARecord.Parse(data, ttl);
+
 			default:
 				return new UnknownRecord(ttl);
 		}
@@ -234,5 +243,95 @@ public static class DnsRecord
 		internal static SRVRecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new SRVRecord(ttl, (ushort)((data[0] << 8) | data[1]), (ushort)((data[2] << 8) | data[3]), (ushort)((data[4] << 8) | data[5]), Misc.Misc.ParseDomain(data, 6, out _, raw));
 
 		public override string ToString() => $"SRV: {Target} (Priority: {Priority}, Weight: {Weight}, Port: {Port})";
+	}
+
+	public class CAARecord : DNSRecord
+	{
+		public readonly byte Flags;
+
+		public readonly string Tag;
+
+		public readonly string Value;
+
+		public QType Type => QType.CAA;
+
+		private CAARecord(uint ttl, byte flags, string tag, string value) : base(ttl)
+		{
+			Flags = flags;
+			Tag = tag;
+			Value = value;
+		}
+
+		internal static CAARecord Parse(ArraySegment<byte> data, uint ttl)
+		{
+			byte tagLength = data[1];
+			return new CAARecord(ttl, data[0], DnsClient.Encoding.GetString(data[2..(tagLength + 2)]), DnsClient.Encoding.GetString(data[(tagLength + 2)..]));
+		}
+
+		public override string ToString() => $"CAA: {Flags} {Tag} {Value}";
+	}
+
+	public class DSRecord : DNSRecord
+	{
+		public readonly ushort KeyId;
+
+		public readonly byte Algorithm;
+
+		public readonly byte DigestType;
+
+		public readonly byte[] Digest;
+
+		public QType Type => QType.DS;
+
+		private DSRecord(uint ttl, ushort keyId, byte algorithm, byte digestType, byte[] digest) : base(ttl)
+		{
+			KeyId = keyId;
+			Algorithm = algorithm;
+			DigestType = digestType;
+			Digest = digest;
+		}
+
+		internal static DSRecord Parse(ArraySegment<byte> data, uint ttl)
+		{
+			byte[] digest = new byte[data.Count - 4];
+			for (int i = 0; i < digest.Length; i++)
+				digest[i] = data[i + 4];
+
+			return new DSRecord(ttl, (ushort)((data[0] << 8) | data[1]), data[2], data[3], digest);
+		}
+
+		public override string ToString() => $"DS:{Environment.NewLine}Key ID: {KeyId}{Environment.NewLine}Algorithm: {Algorithm}{Environment.NewLine}Digest Type: {DigestType}{Environment.NewLine}Digest: {BitConverter.ToString(Digest).Replace("-", string.Empty, StringComparison.Ordinal)}";
+	}
+
+	public class DNSKEYRecord : DNSRecord
+	{
+		public readonly ushort Flags;
+
+		public readonly byte Protocol;
+
+		public readonly byte Algorithm;
+
+		public readonly byte[] PublicKey;
+
+		public QType Type => QType.DNSKEY;
+
+		private DNSKEYRecord(uint ttl, ushort flags, byte protocol, byte algorithm, byte[] publicKey) : base(ttl)
+		{
+			Flags = flags;
+			Protocol = protocol;
+			Algorithm = algorithm;
+			PublicKey = publicKey;
+		}
+
+		internal static DNSKEYRecord Parse(ArraySegment<byte> data, uint ttl)
+		{
+			byte[] publicKey = new byte[data.Count - 4];
+			for (int i = 0; i < publicKey.Length; i++)
+				publicKey[i] = data[i + 4];
+
+			return new DNSKEYRecord(ttl, (ushort)((data[0] << 8) | data[1]), data[2], data[3], publicKey);
+		}
+
+		public override string ToString() => $"DNSKEY:{Environment.NewLine}Flags: {Flags}{Environment.NewLine}Protocol: {Protocol}{Environment.NewLine}Algorithm: {Algorithm}{Environment.NewLine}PublicKey: {BitConverter.ToString(PublicKey).Replace("-", string.Empty, StringComparison.Ordinal)}";
 	}
 }

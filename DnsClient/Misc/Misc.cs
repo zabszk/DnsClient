@@ -105,7 +105,7 @@ public static class Misc
 					if (!address.TryWriteBytes(addr, out int written) || written != 16)
 						throw new Exception("Can't parse IPv6 address");
 
-					string str = BitConverter.ToString(addr).Replace("-", string.Empty).ToLowerInvariant();
+					string str = BitConverter.ToString(addr).Replace("-", string.Empty, StringComparison.Ordinal).ToLowerInvariant();
 					StringBuilder sb = new(72);
 
 					for (int i = str.Length - 1; i >= 0; i--)
