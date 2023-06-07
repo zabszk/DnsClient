@@ -1,129 +1,174 @@
 ﻿using System;
 using System.Net;
 using DnsClient.Enums;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable InconsistentNaming
 
 namespace DnsClient.Data.Records;
 
+/// <summary>
+/// A class responsible for parsing and representing DNS records
+/// </summary>
 public static class DnsRecord
 {
 	internal static DNSRecord? Parse(QType type, ArraySegment<byte> data, uint ttl, byte[] rawResponse)
 	{
-		switch (type)
+		return type switch
 		{
-			case QType.A:
-				return ARecord.Parse(data, ttl);
-
-			case QType.NS:
-				return NSRecord.Parse(data, ttl, rawResponse);
-
-			case QType.CNAME:
-				return CNAMERecord.Parse(data, ttl, rawResponse);
-
-			case QType.SOA:
-				return SOARecord.Parse(data, ttl, rawResponse);
-
-			case QType.PTR:
-				return PTRRecord.Parse(data, ttl, rawResponse);
-
-			case QType.MX:
-				return MXRecord.Parse(data, ttl, rawResponse);
-
-			case QType.TXT:
-				return TXTRecord.Parse(data, ttl);
-
-			case QType.AAAA:
-				return AAAARecord.Parse(data, ttl);
-
-			case QType.SRV:
-				return SRVRecord.Parse(data, ttl, rawResponse);
-
-			case QType.DS:
-				return DSRecord.Parse(data, ttl);
-
-			case QType.DNSKEY:
-				return DNSKEYRecord.Parse(data, ttl);
-
-			case QType.CAA:
-				return CAARecord.Parse(data, ttl);
-
-			default:
-				return new UnknownRecord(ttl);
-		}
+			QType.A => ARecord.Parse(data, ttl),
+			QType.NS => NSRecord.Parse(data, ttl, rawResponse),
+			QType.CNAME => CNAMERecord.Parse(data, ttl, rawResponse),
+			QType.SOA => SOARecord.Parse(data, ttl, rawResponse),
+			QType.PTR => PTRRecord.Parse(data, ttl, rawResponse),
+			QType.MX => MXRecord.Parse(data, ttl, rawResponse),
+			QType.TXT => TXTRecord.Parse(data, ttl),
+			QType.AAAA => AAAARecord.Parse(data, ttl),
+			QType.SRV => SRVRecord.Parse(data, ttl, rawResponse),
+			QType.DS => DSRecord.Parse(data, ttl),
+			QType.DNSKEY => DNSKEYRecord.Parse(data, ttl),
+			QType.CAA => CAARecord.Parse(data, ttl),
+			_ => new UnknownRecord(ttl)
+		};
 	}
 
+	/// <summary>
+	/// A class representing any type of DNS record
+	/// </summary>
 	public abstract class DNSRecord
 	{
+		/// <summary>
+		/// DNS record TTL value
+		/// </summary>
+		// ReSharper disable once InconsistentNaming
 		public readonly uint TTL;
 
-		public QType Type { get; }
+		/// <summary>
+		/// DNS record type
+		/// </summary>
+		public abstract QType Type { get; }
 
 		internal DNSRecord(uint ttl) => TTL = ttl;
 	}
 
+	/// <summary>
+	/// Unknown type of DNS record
+	/// </summary>
 	public class UnknownRecord : DNSRecord
 	{
-		public QType Type => QType.Unknown;
+		/// <inheritdoc />
+		public override QType Type => QType.Unknown;
 
 		internal UnknownRecord(uint ttl) : base(ttl) { }
 
+		/// <inheritdoc />
 		public override string ToString() => "(unsupported DNS record)";
 	}
 
+	/// <summary>
+	/// A DNS record
+	/// </summary>
 	public class ARecord : DNSRecord
 	{
+		/// <summary>
+		/// IPv4 address pointed by the record
+		/// </summary>
 		public readonly IPAddress Address;
-		public QType Type => QType.A;
+
+		/// <inheritdoc />
+		public override QType Type => QType.A;
 
 		private ARecord(uint ttl, IPAddress address) : base(ttl) => Address = address;
 
 		internal static ARecord? Parse(ArraySegment<byte> data, uint ttl) => data.Count != 4 ? null : new ARecord(ttl, new IPAddress(data));
 
+		/// <inheritdoc />
 		public override string ToString() => $"A: {Address}";
 	}
 
+	/// <summary>
+	/// AAAA DNS record
+	/// </summary>
 	public class AAAARecord : DNSRecord
 	{
+		/// <summary>
+		/// IPv6 address pointed by the record
+		/// </summary>
 		public readonly IPAddress Address;
 
-		public QType Type => QType.AAAA;
+		/// <inheritdoc />
+		public override QType Type => QType.AAAA;
 
 		private AAAARecord(uint ttl, IPAddress address) : base(ttl) => Address = address;
 
 		internal static AAAARecord? Parse(ArraySegment<byte> data, uint ttl) => data.Count != 16 ? null : new AAAARecord(ttl, new IPAddress(data));
 
+		/// <inheritdoc />
 		public override string ToString() => $"AAAA: {Address}";
 	}
 
+	/// <summary>
+	/// CNAME DNS record
+	/// </summary>
 	public class CNAMERecord : DNSRecord
 	{
+		/// <summary>
+		/// Domain pointed by the record
+		/// </summary>
 		public readonly string Alias;
 
-		public QType Type => QType.CNAME;
+		/// <inheritdoc />
+		public override QType Type => QType.CNAME;
 
 		private CNAMERecord(uint ttl, string alias) : base(ttl) => Alias = alias;
 
 		internal static CNAMERecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new (ttl, Misc.Misc.ParseDomain(data, 0, out _, raw));
 
+		/// <inheritdoc />
 		public override string ToString() => $"CNAME: {Alias}";
 	}
 
+	/// <summary>
+	/// SOA DNS record
+	/// </summary>
 	public class SOARecord : DNSRecord
 	{
+		/// <summary>
+		/// Primary Name Server
+		/// </summary>
 		public readonly string PrimaryNameServer;
 
+		/// <summary>
+		/// Responsible Authority Mailbox
+		/// </summary>
 		public readonly string ResponsibleAuthorityMailbox;
 
+		/// <summary>
+		/// Serial Number
+		/// </summary>
 		public readonly uint SerialNumber;
 
+		/// <summary>
+		/// Refresh Interval
+		/// </summary>
 		public readonly uint RefreshInterval;
 
+		/// <summary>
+		/// Retry Interval
+		/// </summary>
 		public readonly uint RetryInterval;
 
+		/// <summary>
+		/// Expire Limit
+		/// </summary>
 		public readonly uint ExpireLimit;
 
+		/// <summary>
+		/// Minimum TTL
+		/// </summary>
 		public readonly uint MinimumTTL;
 
-		public QType Type => QType.SOA;
+		/// <inheritdoc />
+		public override QType Type => QType.SOA;
 
 		private SOARecord(uint ttl, string primaryNameServer, string responsibleAuthorityMailbox, uint serialNumber, uint refreshInterval, uint retryInterval, uint expireLimit, uint minimumTTL) : base(ttl)
 		{
@@ -159,42 +204,69 @@ public static class DnsRecord
 			return new SOARecord(ttl, pns, ram, sn, refI, retI, expLim, minTTL);
 		}
 
+		/// <inheritdoc />
 		public override string ToString() => $"SOA: {Environment.NewLine}Primary New Server: {PrimaryNameServer}{Environment.NewLine}Responsible Authority Mailbox: {ResponsibleAuthorityMailbox}{Environment.NewLine}Serial Number: {SerialNumber}{Environment.NewLine}Refresh Interval: {RefreshInterval}{Environment.NewLine}Retry Interval: {RetryInterval}{Environment.NewLine}Expire Limit: {ExpireLimit}{Environment.NewLine}Minimum TTL: {MinimumTTL}";
 	}
 
+	/// <summary>
+	/// NS DNS record
+	/// </summary>
 	public class NSRecord : DNSRecord
 	{
+		/// <summary>
+		/// Name Server address pointed by the record
+		/// </summary>
 		public readonly string NameServer;
 
-		public QType Type => QType.NS;
+		/// <inheritdoc />
+		public override QType Type => QType.NS;
 
 		private NSRecord(uint ttl, string nameServer) : base(ttl) => NameServer = nameServer;
 
 		internal static NSRecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new (ttl, Misc.Misc.ParseDomain(data, 0, out _, raw));
 
+		/// <inheritdoc />
 		public override string ToString() => $"NS: {NameServer}";
 	}
 
+	/// <summary>
+	/// PTR DNS record
+	/// </summary>
 	public class PTRRecord : DNSRecord
 	{
+		/// <summary>
+		/// Domain Name pointed by the record
+		/// </summary>
 		public readonly string DomainName;
 
-		public QType Type => QType.PTR;
+		/// <inheritdoc />
+		public override QType Type => QType.PTR;
 
 		private PTRRecord(uint ttl, string domainName) : base(ttl) => DomainName = domainName;
 
 		internal static PTRRecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new (ttl, Misc.Misc.ParseDomain(data, 0, out _, raw));
 
+		/// <inheritdoc />
 		public override string ToString() => $"PTR: {DomainName}";
 	}
 
+	/// <summary>
+	/// MX DNS record
+	/// </summary>
 	public class MXRecord : DNSRecord
 	{
+		/// <summary>
+		/// Mail Exchange server address pointed by the record
+		/// </summary>
 		public readonly string MailExchange;
 
+		/// <summary>
+		/// Mail Exchange server preference value
+		/// </summary>
 		public readonly ushort Preference;
 
-		public QType Type => QType.MX;
+		/// <inheritdoc />
+		public override QType Type => QType.MX;
 
 		private MXRecord(uint ttl, string mailExchange, ushort preference) : base(ttl)
 		{
@@ -204,33 +276,58 @@ public static class DnsRecord
 
 		internal static MXRecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new (ttl, Misc.Misc.ParseDomain(data, 2, out _, raw), (ushort)((data[0] << 8) | data[1]));
 
+		/// <inheritdoc />
 		public override string ToString() => $"MX: {MailExchange} (Preference: {Preference})";
 	}
 
+	/// <summary>
+	/// TXT DNS record
+	/// </summary>
 	public class TXTRecord : DNSRecord
 	{
+		/// <summary>
+		/// Text of the DNS record
+		/// </summary>
 		public readonly string Text;
 
-		public QType Type => QType.TXT;
+		/// <inheritdoc />
+		public override QType Type => QType.TXT;
 
 		private TXTRecord(uint ttl, string text) : base(ttl) => Text = text;
 
 		internal static TXTRecord? Parse(ArraySegment<byte> data, uint ttl) => data[0] != data.Count - 1 ? null : new TXTRecord(ttl, DnsClient.Encoding.GetString(data[1..]));
 
+		/// <inheritdoc />
 		public override string ToString() => $"TXT: {Text}";
 	}
 
+	/// <summary>
+	/// SRV DNS record
+	/// </summary>
 	public class SRVRecord : DNSRecord
 	{
+		/// <summary>
+		/// DNS record priority
+		/// </summary>
 		public readonly ushort Priority;
 
+		/// <summary>
+		/// DNS record weight
+		/// </summary>
 		public readonly ushort Weight;
 
+		/// <summary>
+		/// Port of the service
+		/// </summary>
 		public readonly ushort Port;
 
+		/// <summary>
+		/// Address of the service
+		/// </summary>
 		public readonly string Target;
 
-		public QType Type => QType.SRV;
+		/// <inheritdoc />
+		public override QType Type => QType.SRV;
 
 		private SRVRecord(uint ttl, ushort priority, ushort weight, ushort port, string target) : base(ttl)
 		{
@@ -242,18 +339,32 @@ public static class DnsRecord
 
 		internal static SRVRecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new SRVRecord(ttl, (ushort)((data[0] << 8) | data[1]), (ushort)((data[2] << 8) | data[3]), (ushort)((data[4] << 8) | data[5]), Misc.Misc.ParseDomain(data, 6, out _, raw));
 
+		/// <inheritdoc />
 		public override string ToString() => $"SRV: {Target} (Priority: {Priority}, Weight: {Weight}, Port: {Port})";
 	}
 
+	/// <summary>
+	/// CAA DNS record
+	/// </summary>
 	public class CAARecord : DNSRecord
 	{
+		/// <summary>
+		/// DNS record flags
+		/// </summary>
 		public readonly byte Flags;
 
+		/// <summary>
+		/// DNS record tag
+		/// </summary>
 		public readonly string Tag;
 
+		/// <summary>
+		/// DNS record value
+		/// </summary>
 		public readonly string Value;
 
-		public QType Type => QType.CAA;
+		/// <inheritdoc />
+		public override QType Type => QType.CAA;
 
 		private CAARecord(uint ttl, byte flags, string tag, string value) : base(ttl)
 		{
@@ -268,20 +379,37 @@ public static class DnsRecord
 			return new CAARecord(ttl, data[0], DnsClient.Encoding.GetString(data[2..(tagLength + 2)]), DnsClient.Encoding.GetString(data[(tagLength + 2)..]));
 		}
 
+		/// <inheritdoc />
 		public override string ToString() => $"CAA: {Flags} {Tag} {Value}";
 	}
 
+	/// <summary>
+	/// DS DNS record
+	/// </summary>
 	public class DSRecord : DNSRecord
 	{
+		/// <summary>
+		/// KeyId
+		/// </summary>
 		public readonly ushort KeyId;
 
+		/// <summary>
+		/// Algorithm
+		/// </summary>
 		public readonly byte Algorithm;
 
+		/// <summary>
+		/// Type of the digest
+		/// </summary>
 		public readonly byte DigestType;
 
+		/// <summary>
+		/// Digest
+		/// </summary>
 		public readonly byte[] Digest;
 
-		public QType Type => QType.DS;
+		/// <inheritdoc />
+		public override QType Type => QType.DS;
 
 		private DSRecord(uint ttl, ushort keyId, byte algorithm, byte digestType, byte[] digest) : base(ttl)
 		{
@@ -300,20 +428,37 @@ public static class DnsRecord
 			return new DSRecord(ttl, (ushort)((data[0] << 8) | data[1]), data[2], data[3], digest);
 		}
 
+		/// <inheritdoc />
 		public override string ToString() => $"DS:{Environment.NewLine}Key ID: {KeyId}{Environment.NewLine}Algorithm: {Algorithm}{Environment.NewLine}Digest Type: {DigestType}{Environment.NewLine}Digest: {BitConverter.ToString(Digest).Replace("-", string.Empty, StringComparison.Ordinal)}";
 	}
 
+	/// <summary>
+	/// DNSKEY DNS record
+	/// </summary>
 	public class DNSKEYRecord : DNSRecord
 	{
+		/// <summary>
+		/// DNS record flags
+		/// </summary>
 		public readonly ushort Flags;
 
+		/// <summary>
+		/// Protocol
+		/// </summary>
 		public readonly byte Protocol;
 
+		/// <summary>
+		/// Algorithm
+		/// </summary>
 		public readonly byte Algorithm;
 
+		/// <summary>
+		/// Public Key
+		/// </summary>
 		public readonly byte[] PublicKey;
 
-		public QType Type => QType.DNSKEY;
+		/// <inheritdoc />
+		public override QType Type => QType.DNSKEY;
 
 		private DNSKEYRecord(uint ttl, ushort flags, byte protocol, byte algorithm, byte[] publicKey) : base(ttl)
 		{
@@ -332,6 +477,7 @@ public static class DnsRecord
 			return new DNSKEYRecord(ttl, (ushort)((data[0] << 8) | data[1]), data[2], data[3], publicKey);
 		}
 
+		/// <inheritdoc />
 		public override string ToString() => $"DNSKEY:{Environment.NewLine}Flags: {Flags}{Environment.NewLine}Protocol: {Protocol}{Environment.NewLine}Algorithm: {Algorithm}{Environment.NewLine}PublicKey: {BitConverter.ToString(PublicKey).Replace("-", string.Empty, StringComparison.Ordinal)}";
 	}
 }

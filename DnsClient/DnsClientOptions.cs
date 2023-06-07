@@ -3,6 +3,9 @@ using DnsClient.Logging;
 
 namespace DnsClient
 {
+	/// <summary>
+	/// <see cref="DnsClient"/> options
+	/// </summary>
 	public struct DnsClientOptions
 	{
 		public ushort MaxAtempts
@@ -37,6 +40,9 @@ namespace DnsClient
 		private int _timeoutInnerDelay = 50;
 		private ushort _maxAttempts = 5;
 
+		/// <summary>
+		/// Constructor
+		/// </summary>
 		public DnsClientOptions() { }
 	}
 }

@@ -7,6 +7,9 @@ using System.Text;
 
 namespace DnsClient.Misc;
 
+/// <summary>
+/// Class containing helper methods
+/// </summary>
 public static class Misc
 {
 	#region Domain parsing
@@ -75,9 +78,7 @@ public static class Misc
 	}
 	#endregion
 
-	#region PTR
-	public static string GetPtrAddress(string address) => GetPtrAddress(IPAddress.Parse(address));
-
+	#region PT
 	public static bool TryGetPtrAddress(string address, out string? ptrAddress)
 	{
 		if (IPAddress.TryParse(address, out var ptr))
@@ -89,6 +90,8 @@ public static class Misc
 		ptrAddress = null;
 		return false;
 	}
+
+	public static string GetPtrAddress(string address) => GetPtrAddress(IPAddress.Parse(address));
 
 	public static string GetPtrAddress(IPAddress address)
 	{

@@ -3,6 +3,9 @@ using DnsClient.Enums;
 
 namespace DnsClient.Data
 {
+	/// <summary>
+	/// DNS Query
+	/// </summary>
 	public class DnsQuery
 	{
 		internal readonly int QueryLength = 17; //12 + 1 + 2 + 2 => header + null after the domain + query type + query class
