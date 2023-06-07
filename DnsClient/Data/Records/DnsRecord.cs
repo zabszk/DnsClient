@@ -14,7 +14,7 @@ public static class DnsRecord
 				return ARecord.Parse(data, ttl);
 
 			case QType.NS:
-				break;
+				return NSRecord.Parse(data, ttl, rawResponse);
 
 			case QType.CNAME:
 				return CNAMERecord.Parse(data, ttl, rawResponse);
@@ -100,13 +100,26 @@ public static class DnsRecord
 		public override string ToString() => $"CNAME: {Alias}";
 	}
 
+	public class NSRecord : DNSRecord
+	{
+		public readonly string NameServer;
+
+		public QType Type => QType.NS;
+
+		private NSRecord(uint ttl, string nameServer) : base(ttl) => NameServer = nameServer;
+
+		internal static NSRecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new (ttl, Misc.Misc.ParseDomain(data, 0, out _, raw));
+
+		public override string ToString() => $"NS: {NameServer}";
+	}
+
 	public class PTRRecord : DNSRecord
 	{
 		public readonly string DomainName;
 
 		public QType Type => QType.PTR;
 
-		private PTRRecord(uint ttl, string alias) : base(ttl) => DomainName = alias;
+		private PTRRecord(uint ttl, string domainName) : base(ttl) => DomainName = domainName;
 
 		internal static PTRRecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new (ttl, Misc.Misc.ParseDomain(data, 0, out _, raw));
 
