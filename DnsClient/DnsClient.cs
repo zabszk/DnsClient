@@ -71,6 +71,8 @@ namespace DnsClient
 		}
 		#endregion
 
+		public async Task<DnsResponse> Query(string domain, QType qType) => await Query(new DnsQuery(domain, qType));
+
 		public async Task<DnsResponse> Query(DnsQuery query)
 		{
 			byte[] buffer = ArrayPool<byte>.Shared.Rent(query.QueryLength);

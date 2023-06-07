@@ -6,7 +6,7 @@ namespace DnsClient.Data.Records;
 
 public static class DnsRecord
 {
-	internal static DNSRecord? Parse(QType type, ArraySegment<byte> data, uint ttl)
+	internal static DNSRecord? Parse(QType type, ArraySegment<byte> data, uint ttl, byte[] rawResponse)
 	{
 		switch (type)
 		{
@@ -17,7 +17,7 @@ public static class DnsRecord
 				break;
 
 			case QType.CNAME:
-				break;
+				return CNAMERecord.Parse(data, ttl, rawResponse);
 
 			case QType.SOA:
 				break;
@@ -26,7 +26,7 @@ public static class DnsRecord
 				break;
 
 			case QType.MX:
-				break;
+				return MXRecord.Parse(data, ttl, rawResponse);
 
 			case QType.TXT:
 				return TXTRecord.Parse(data, ttl);
@@ -77,6 +77,7 @@ public static class DnsRecord
 	public class AAAARecord : DNSRecord
 	{
 		public readonly IPAddress Address;
+
 		public QType Type => QType.AAAA;
 
 		private AAAARecord(uint ttl, IPAddress address) : base(ttl) => Address = address;
@@ -86,9 +87,42 @@ public static class DnsRecord
 		public override string ToString() => $"AAAA: {Address}";
 	}
 
+	public class CNAMERecord : DNSRecord
+	{
+		public readonly string Alias;
+
+		public QType Type => QType.CNAME;
+
+		private CNAMERecord(uint ttl, string alias) : base(ttl) => Alias = alias;
+
+		internal static CNAMERecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new (ttl, Misc.Misc.ParseDomain(data, 0, out _, raw));
+
+		public override string ToString() => $"CNAME: {Alias}";
+	}
+
+	public class MXRecord : DNSRecord
+	{
+		public readonly string MailExchange;
+
+		public readonly ushort Preference;
+
+		public QType Type => QType.MX;
+
+		private MXRecord(uint ttl, string mailExchange, ushort preference) : base(ttl)
+		{
+			MailExchange = mailExchange;
+			Preference = preference;
+		}
+
+		internal static MXRecord Parse(ArraySegment<byte> data, uint ttl, byte[] raw) => new (ttl, Misc.Misc.ParseDomain(data, 2, out _, raw), (ushort)((data[0] << 8) | data[1]));
+
+		public override string ToString() => $"MX: {MailExchange} (Preference: {Preference})";
+	}
+
 	public class TXTRecord : DNSRecord
 	{
 		public readonly string Text;
+
 		public QType Type => QType.TXT;
 
 		private TXTRecord(uint ttl, string text) : base(ttl) => Text = text;

@@ -81,7 +81,7 @@ namespace DnsClient.Data
 					if (remaining < length)
 						break;
 
-					DnsRecord.DNSRecord? record = DnsRecord.Parse(type, new ArraySegment<byte>(buffer, i, length), ttl);
+					DnsRecord.DNSRecord? record = DnsRecord.Parse(type, new ArraySegment<byte>(buffer, i, length), ttl, buffer);
 					if (record != null)
 						Response.Records!.Add(record);
 
