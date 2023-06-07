@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using DnsClient.Logging;
 
 namespace DnsClient
@@ -6,9 +7,15 @@ namespace DnsClient
 	/// <summary>
 	/// <see cref="DnsClient"/> options
 	/// </summary>
+	[SuppressMessage("ReSharper", "FieldCanBeMadeReadOnly.Global")]
+	[SuppressMessage("ReSharper", "ConvertToConstant.Global")]
 	public struct DnsClientOptions
 	{
-		public ushort MaxAtempts
+		/// <summary>
+		/// Maximum amount of attempts of performing a DNS query
+		/// </summary>
+		/// <exception cref="ArgumentException">Value is not greater than 0</exception>
+		public ushort MaxAttempts
 		{
 			get => _maxAttempts;
 
@@ -21,6 +28,10 @@ namespace DnsClient
 			}
 		}
 
+		/// <summary>
+		/// Controls how often the client checks for replies to each query (delay time in milliseconds)
+		/// </summary>
+		/// <exception cref="ArgumentException"></exception>
 		public int TimeoutInnerDelay
 		{
 			get => _timeoutInnerDelay;
@@ -34,7 +45,14 @@ namespace DnsClient
 			}
 		}
 
+		/// <summary>
+		/// DNS query timeout (in milliseconds)
+		/// </summary>
 		public uint Timeout = 500;
+
+		/// <summary>
+		/// Errors handler
+		/// </summary>
 		public IErrorLogging? ErrorLogging = null;
 
 		private int _timeoutInnerDelay = 50;

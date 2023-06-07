@@ -13,8 +13,19 @@ namespace DnsClient.Data
 		private readonly string[] _domain;
 		private readonly QType[] _type;
 
+		/// <summary>
+		/// Constructor of a DNS query
+		/// </summary>
+		/// <param name="name">Domain to query</param>
+		/// <param name="type">DNS record QType to obtain</param>
 		public DnsQuery(string name, QType type) : this(name, new[] {type}) { }
 
+		/// <summary>
+		/// Constructor of a DNS query.
+		/// WARNING: Most of the DNS servers DOES NOT support querying multiple QTypes at once and will only respond to the first type.
+		/// </summary>
+		/// <param name="name">Domain to query</param>
+		/// <param name="type">Array of DNS record QTypes to obtain</param>
 		public DnsQuery(string name, QType[] type)
 		{
 			if (string.IsNullOrWhiteSpace(name))

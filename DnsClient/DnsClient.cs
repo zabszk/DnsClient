@@ -119,7 +119,7 @@ namespace DnsClient
 
 			query.BuildQuery(buffer, transactionId);
 
-			for (ushort i = 0; i < Options.MaxAtempts; i++)
+			for (ushort i = 0; i < Options.MaxAttempts; i++)
 			{
 				await _socket.SendAsync(new ArraySegment<byte>(buffer, 0, query.QueryLength), SocketFlags.None);
 				if (await status.Wait())
@@ -207,6 +207,7 @@ namespace DnsClient
 			finally
 			{
 				ArrayPool<byte>.Shared.Return(buffer);
+				_socket.Close();
 			}
 		}
 		#endregion
@@ -239,10 +240,12 @@ namespace DnsClient
 		public void Dispose()
 		{
 			GC.SuppressFinalize(this);
-
 			_ctSource.Cancel();
 		}
 
+		/// <summary>
+		/// Stops and disposes the DNS client
+		/// </summary>
 		~DnsClient() => Dispose();
 		#endregion
 	}

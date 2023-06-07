@@ -43,18 +43,18 @@ while (true)
 
 	foreach (var s in sp)
 	{
-		if (!Enum.TryParse(typeof(QType), s, true, out var QType))
+		if (!Enum.TryParse(typeof(QType), s, true, out var qType))
 		{
 			Console.WriteLine($"Invalid record type {s}!");
 			Console.WriteLine();
 			continue;
 		}
 
-		types[lastType++] = (QType)QType;
+		types[lastType++] = (QType)qType;
 	}
 
 	Console.WriteLine("Querying 1.1.1.1...");
-	DnsResponse response = await dns.Query(new DnsQuery(domain, types));
+	DnsResponse response = await dns.Query(new DnsQuery(domain!, types));
 
 	Console.WriteLine($"Query result: {response.ErrorCode}");
 
