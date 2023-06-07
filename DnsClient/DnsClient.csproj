@@ -1,14 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Configurations>Release</Configurations>
+    <Platforms>AnyCPU</Platforms>
+
+    <DebugSymbols>true</DebugSymbols>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageTags>dns</PackageTags>
+    
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>10</LangVersion>
     <Nullable>enable</Nullable>
     <Authors>Łukasz Jurczyk</Authors>
     <Copyright>Copyright (c) 2023 Łukasz Jurczyk</Copyright>
     <PackageProjectUrl>https://github.com/zabszk/DnsClient</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/zabszk/DnsClient/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/zabszk/DnsClient</RepositoryUrl>
+    <PackageId>zabszk.DnsClient</PackageId>
+    <Title>DnsClient</Title>
+    <Description>A thread-safe DNS Client library for C#.</Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -19,4 +35,8 @@
     <DocumentationFile>bin\Release\DnsClient.xml</DocumentationFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="..\README.md" Pack="True" PackagePath="\" />
+    <None Include="..\LICENSE" Pack="True" PackagePath="\" />
+  </ItemGroup>
 </Project>
