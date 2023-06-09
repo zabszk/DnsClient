@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using DnsClient.Logging;
 
 namespace DnsClient
@@ -54,6 +55,19 @@ namespace DnsClient
 		/// Errors handler
 		/// </summary>
 		public IErrorLogging? ErrorLogging = null;
+
+		/// <summary>
+		/// Indicates whether queries with truncated response should be retried using TCP instead of UDP
+		/// </summary>
+		// ReSharper disable once InconsistentNaming
+		public bool UseTCPForTruncated = true;
+
+		/// <summary>
+		/// Allows to set a different endpoint for TCP connections.
+		/// Ignored if <see cref="UseTCPForTruncated"/> is set to <value>FALSE</value>
+		/// </summary>
+		// ReSharper disable once InconsistentNaming
+		public EndPoint? TCPEndpointOverride = null;
 
 		private int _timeoutInnerDelay = 50;
 		private ushort _maxAttempts = 5;

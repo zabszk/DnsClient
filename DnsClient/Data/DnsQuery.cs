@@ -12,13 +12,15 @@ namespace DnsClient.Data
 
 		private readonly string[] _domain;
 		private readonly QType[] _type;
+		internal readonly bool AcceptTruncated;
 
 		/// <summary>
 		/// Constructor of a DNS query
 		/// </summary>
 		/// <param name="name">Domain to query</param>
 		/// <param name="type">DNS record QType to obtain</param>
-		public DnsQuery(string name, QType type) : this(name, new[] {type}) { }
+		/// <param name="acceptTruncated">If set to true, the DNS client will accept truncated responses and won't retry the query using TCP</param>
+		public DnsQuery(string name, QType type, bool acceptTruncated) : this(name, new[] {type}, acceptTruncated) { }
 
 		/// <summary>
 		/// Constructor of a DNS query.
@@ -26,7 +28,8 @@ namespace DnsClient.Data
 		/// </summary>
 		/// <param name="name">Domain to query</param>
 		/// <param name="type">Array of DNS record QTypes to obtain</param>
-		public DnsQuery(string name, QType[] type)
+		/// <param name="acceptTruncated">If set to true, the DNS client will accept truncated responses and won't retry the query using TCP</param>
+		public DnsQuery(string name, QType[] type, bool acceptTruncated = false)
 		{
 			if (string.IsNullOrWhiteSpace(name))
 				throw new ArgumentException("Name can't be null or whitespace.", nameof(name));
@@ -38,6 +41,7 @@ namespace DnsClient.Data
 				throw new ArgumentException("Too big array of types", nameof(type));
 
 			_type = type;
+			AcceptTruncated = acceptTruncated;
 
 			_domain = name.Split('.');
 
