@@ -16,6 +16,7 @@ DNS Client class provided by this library is thread-safe.
  * DS
  * DNSKEY
  * CAA
+ * URI
 
 # Basic usage
 ```cs

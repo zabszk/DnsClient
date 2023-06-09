@@ -18,7 +18,7 @@ namespace DnsClient.Data
 
 		internal DnsQueryStatus(DnsClient client) => _client = client;
 
-		internal void Parse(byte[] buffer, int recv)
+		internal void Parse(byte[] buffer, int recv, bool tcpUsed = false)
 		{
 			try
 			{
@@ -51,7 +51,7 @@ namespace DnsClient.Data
 
 				ushort processed = 0;
 
-				Response = new DnsResponse(DnsErrorCode.NoError, new());
+				Response = new DnsResponse(DnsErrorCode.NoError, (buffer[2] & 2) != 0, tcpUsed, new());
 
 				while (i < recv && processed < answers)
 				{
