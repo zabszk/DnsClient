@@ -51,7 +51,7 @@ namespace DnsClient.Data
 
 				ushort processed = 0;
 
-				Response = new DnsResponse(DnsErrorCode.NoError, new());
+				Response = new DnsResponse(DnsErrorCode.NoError, (buffer[2] & 2) != 0, new());
 
 				while (i < recv && processed < answers)
 				{

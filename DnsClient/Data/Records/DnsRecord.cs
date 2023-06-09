@@ -65,19 +65,33 @@ public static class DnsRecord
 	}
 
 	/// <summary>
-	/// A DNS record
+	/// Class representing either A or AAAA DNS record
 	/// </summary>
-	public class ARecord : DNSRecord
+	public abstract class IPAddressRecord : DNSRecord
 	{
 		/// <summary>
-		/// IPv4 address pointed by the record
+		/// IP address pointed by the record
 		/// </summary>
+		// ReSharper disable once MemberCanBeProtected.Global
 		public readonly IPAddress Address;
 
+		/// <summary>
+		/// Class constructor
+		/// </summary>
+		/// <param name="ttl">TTL value of the record</param>
+		/// <param name="address">IP address pointed by the record</param>
+		protected IPAddressRecord(uint ttl, IPAddress address) : base(ttl) => Address = address;
+	}
+
+	/// <summary>
+	/// A DNS record
+	/// </summary>
+	public class ARecord : IPAddressRecord
+	{
 		/// <inheritdoc />
 		public override QType Type => QType.A;
 
-		private ARecord(uint ttl, IPAddress address) : base(ttl) => Address = address;
+		private ARecord(uint ttl, IPAddress address) : base(ttl, address) { }
 
 		internal static ARecord? Parse(ArraySegment<byte> data, uint ttl) => data.Count != 4 ? null : new ARecord(ttl, new IPAddress(data));
 
@@ -88,17 +102,12 @@ public static class DnsRecord
 	/// <summary>
 	/// AAAA DNS record
 	/// </summary>
-	public class AAAARecord : DNSRecord
+	public class AAAARecord : IPAddressRecord
 	{
-		/// <summary>
-		/// IPv6 address pointed by the record
-		/// </summary>
-		public readonly IPAddress Address;
-
 		/// <inheritdoc />
 		public override QType Type => QType.AAAA;
 
-		private AAAARecord(uint ttl, IPAddress address) : base(ttl) => Address = address;
+		private AAAARecord(uint ttl, IPAddress address) : base(ttl, address) { }
 
 		internal static AAAARecord? Parse(ArraySegment<byte> data, uint ttl) => data.Count != 16 ? null : new AAAARecord(ttl, new IPAddress(data));
 
