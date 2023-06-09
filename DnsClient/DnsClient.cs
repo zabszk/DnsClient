@@ -175,6 +175,10 @@ namespace DnsClient
 		private async Task TCPQuery(DnsQueryStatus queryStatus, byte[] buffer, int queryLength)
 		{
 			var ep = Options.TCPEndpointOverride ?? _socket.RemoteEndPoint;
+
+			if (ep == null)
+				return;
+
 			Socket s = new(ep.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 			s.LingerState = new LingerOption(true, 0);
 			s.ReceiveBufferSize = 2048;
@@ -277,7 +281,7 @@ namespace DnsClient
 						if (BitConverter.IsLittleEndian)
 							transactionId = BinaryPrimitives.ReverseEndianness(transactionId);
 
-						if (!_transactions.TryRemove(transactionId, out DnsQueryStatus query) || query.IsComplete)
+						if (!_transactions.TryRemove(transactionId, out DnsQueryStatus? query) || query.IsComplete)
 							continue;
 
 						query.Parse(buffer, recv);
