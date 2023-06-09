@@ -7,7 +7,7 @@
     <DebugSymbols>true</DebugSymbols>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageTags>dns</PackageTags>
+    <PackageTags>dns;dns-client</PackageTags>
     <PackageVersion>1.0.1</PackageVersion>
     <Version>1.0.1</Version>
     
