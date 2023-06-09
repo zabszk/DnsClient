@@ -8,6 +8,8 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageTags>dns</PackageTags>
+    <PackageVersion>1.0.1</PackageVersion>
+    <Version>1.0.1</Version>
     
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>10</LangVersion>
@@ -22,8 +24,8 @@
     <Title>DnsClient</Title>
     <Description>A thread-safe DNS Client library for C#.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.0.0</AssemblyVersion>
-    <FileVersion>1.0.0</FileVersion>
+    <AssemblyVersion>1.0.1</AssemblyVersion>
+    <FileVersion>1.0.1</FileVersion>
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 

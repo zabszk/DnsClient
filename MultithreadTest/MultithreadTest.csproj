@@ -12,6 +12,9 @@
         <PackageProjectUrl>https://github.com/zabszk/DnsClient</PackageProjectUrl>
         <PackageLicenseUrl>https://raw.githubusercontent.com/zabszk/DnsClient/master/LICENSE</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/zabszk/DnsClient</RepositoryUrl>
+        <Version>1.0.1</Version>
+        <AssemblyVersion>1.0.1</AssemblyVersion>
+        <FileVersion>1.0.1</FileVersion>
     </PropertyGroup>
 
     <ItemGroup>
