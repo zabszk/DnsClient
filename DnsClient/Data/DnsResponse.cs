@@ -21,14 +21,21 @@ namespace DnsClient.Data
 		public readonly bool Truncated;
 
 		/// <summary>
+		/// Indicates whether TCP protocol was used to perform this query
+		/// </summary>
+		// ReSharper disable once InconsistentNaming
+		public readonly bool TCPUsed;
+
+		/// <summary>
 		/// Records returned by the DNS server
 		/// </summary>
 		public readonly List<DnsRecord.DNSRecord>? Records;
 
-		internal DnsResponse(DnsErrorCode errorCode, bool truncated = false, List<DnsRecord.DNSRecord>? records = null)
+		internal DnsResponse(DnsErrorCode errorCode, bool truncated = false, bool tcpUsed = false, List<DnsRecord.DNSRecord>? records = null)
 		{
 			ErrorCode = errorCode;
 			Truncated = truncated;
+			TCPUsed = tcpUsed;
 			Records = records;
 		}
 	}

@@ -61,6 +61,9 @@ while (true)
 	if (response.Truncated)
 		Console.WriteLine("Result is truncated by the DNS server! It does not contain all the existing records!");
 
+	if (response.TCPUsed)
+		Console.WriteLine("TCP was used to perform this query.");
+
 	if (response.Records == null)
 		Console.WriteLine("No records found");
 	else

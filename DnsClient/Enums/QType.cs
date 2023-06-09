@@ -21,6 +21,7 @@ public enum QType : ushort
 	SRV = 33,
 	DS = 43,
 	DNSKEY = 48,
+	URI = 256,
 	CAA = 257
 #pragma warning restore CS1591
 }

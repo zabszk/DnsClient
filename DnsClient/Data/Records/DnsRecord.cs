@@ -27,6 +27,7 @@ public static class DnsRecord
 			QType.DS => DSRecord.Parse(data, ttl),
 			QType.DNSKEY => DNSKEYRecord.Parse(data, ttl),
 			QType.CAA => CAARecord.Parse(data, ttl),
+			QType.URI => URIRecord.Parse(data, ttl),
 			_ => new UnknownRecord(ttl)
 		};
 	}
@@ -488,5 +489,41 @@ public static class DnsRecord
 
 		/// <inheritdoc />
 		public override string ToString() => $"DNSKEY:{Environment.NewLine}Flags: {Flags}{Environment.NewLine}Protocol: {Protocol}{Environment.NewLine}Algorithm: {Algorithm}{Environment.NewLine}PublicKey: {BitConverter.ToString(PublicKey).Replace("-", string.Empty, StringComparison.Ordinal)}";
+	}
+
+	/// <summary>
+	/// URI DNS record
+	/// </summary>
+	public class URIRecord : DNSRecord
+	{
+		/// <summary>
+		/// Priority of the DNS record
+		/// </summary>
+		public readonly ushort Priority;
+
+		/// <summary>
+		/// Weight of the DNS record
+		/// </summary>
+		public readonly ushort Weight;
+
+		/// <summary>
+		/// Text of the DNS record
+		/// </summary>
+		public readonly string Target;
+
+		/// <inheritdoc />
+		public override QType Type => QType.URI;
+
+		private URIRecord(uint ttl, ushort priority, ushort weight, string target) : base(ttl)
+		{
+			Priority = priority;
+			Weight = weight;
+			Target = target;
+		}
+
+		internal static URIRecord Parse(ArraySegment<byte> data, uint ttl) => new URIRecord(ttl, (ushort)((data[0] << 8) | data[1]), (ushort)((data[2] << 8) | data[3]), DnsClient.Encoding.GetString(data[4..]));
+
+		/// <inheritdoc />
+		public override string ToString() => $"URI: {Target} (Priority: {Priority}, Weight: {Weight})";
 	}
 }

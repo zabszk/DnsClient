@@ -183,7 +183,8 @@ namespace DnsClient
 
 			try
 			{
-				s.ReceiveTimeout = (int)Options.Timeout * 2;
+				s.ReceiveTimeout = (int)Options.Timeout;
+				s.SendTimeout = (int)Options.Timeout;
 
 				sndBuffer[0] = (byte)(queryLength >> 8);
 				sndBuffer[1] = (byte)(queryLength);
@@ -191,7 +192,11 @@ namespace DnsClient
 				Array.Copy(buffer, 0, sndBuffer, 2, queryLength);
 
 				await s.ConnectAsync(ep);
-				await s.SendAsync(new ArraySegment<byte>(sndBuffer, 0, queryLength + 2), SocketFlags.None);
+				var sent = await s.SendAsync(new ArraySegment<byte>(sndBuffer, 0, queryLength + 2), SocketFlags.None);
+
+				if (sent != queryLength + 2)
+					return;
+
 				var recv = await s.ReceiveAsync(recvBuffer.AsMemory(0, 2), SocketFlags.None);
 
 				if (recv < 2)
@@ -224,7 +229,7 @@ namespace DnsClient
 				if ((recvBuffer[2] & 0x80) == 0) //Received a query, not a response
 					return;
 
-				queryStatus.Parse(recvBuffer, recv);
+				queryStatus.Parse(recvBuffer, recv, true);
 			}
 			catch (Exception e)
 			{
