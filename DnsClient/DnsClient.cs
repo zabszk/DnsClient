@@ -22,7 +22,7 @@ namespace DnsClient
 		/// </summary>
 		public DnsClientOptions Options;
 
-		private readonly Socket _socket;
+		private readonly UdpClient _socket;
 		internal static readonly Encoding Encoding = Encoding.ASCII;
 
 		private readonly ConcurrentDictionary<ushort, DnsQueryStatus> _transactions = new();
@@ -39,8 +39,8 @@ namespace DnsClient
 		/// <param name="options">Options of the DNS client</param>
 		public DnsClient(EndPoint endPoint, DnsClientOptions? options = null)
 		{
-			_socket = new(endPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-			_socket.Connect(endPoint);
+			_socket = new(endPoint.AddressFamily);
+			_socket.Connect((IPEndPoint)endPoint);
 			Options = options ?? new();
 
 			new Thread(ReceiveLoop)
@@ -58,7 +58,7 @@ namespace DnsClient
 		/// <param name="options">Options of the DNS client</param>
 		public DnsClient(IPAddress address, ushort port = 53, DnsClientOptions? options = null)
 		{
-			_socket = new(address.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+			_socket = new(address.AddressFamily);
 			_socket.Connect(address, port);
 			Options = options ?? new();
 
@@ -78,7 +78,7 @@ namespace DnsClient
 		public DnsClient(string address, ushort port = 53, DnsClientOptions? options = null)
 		{
 			var addr = IPAddress.Parse(address);
-			_socket = new(addr.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+			_socket = new(addr.AddressFamily);
 			_socket.Connect(addr, port);
 			Options = options ?? new();
 
@@ -127,20 +127,20 @@ namespace DnsClient
 
 				for (ushort i = 0; i < Options.MaxAttempts; i++)
 				{
-					await _socket.SendAsync(new ArraySegment<byte>(buffer, 0, query.QueryLength), SocketFlags.None);
+					await _socket.SendAsync(buffer, query.QueryLength);
 					if (await status.Wait())
 						break;
 				}
 
 				status.Abort(DnsErrorCode.NoResponseFromServer);
 
-				if (!query.AcceptTruncated && status.Response is {Truncated: true} && Options.UseTCPForTruncated)
+				/*if (!query.AcceptTruncated && status.Response is {Truncated: true} && Options.UseTCPForTruncated)
 				{
 					_transactions.TryRemove(transactionId, out _);
 					transactionAdded = false;
 
 					await TCPQuery(status, buffer, query.QueryLength);
-				}
+				}*/
 
 				return status.Response!;
 			}
@@ -172,9 +172,9 @@ namespace DnsClient
 		public async Task<DnsResponse> QueryReverseDNS(IPAddress address) => await Query(Misc.Misc.GetPtrAddress(address), QType.PTR);
 
 		// ReSharper disable once InconsistentNaming
-		private async Task TCPQuery(DnsQueryStatus queryStatus, byte[] buffer, int queryLength)
+		/*private async Task TCPQuery(DnsQueryStatus queryStatus, byte[] buffer, int queryLength)
 		{
-			var ep = Options.TCPEndpointOverride ?? _socket.RemoteEndPoint;
+			var ep = Options.TCPEndpointOverride ?? _socket.Client.RemoteEndPoint;
 
 			if (ep == null)
 				return;
@@ -245,13 +245,12 @@ namespace DnsClient
 				ArrayPool<byte>.Shared.Return(sndBuffer);
 				s.Dispose();
 			}
-		}
+		}*/
 		#endregion
 
 		#region Receiving
 		private async void ReceiveLoop()
 		{
-			byte[] buffer = ArrayPool<byte>.Shared.Rent(512);
 			try
 			{
 				CancellationToken ct = _ctSource.Token;
@@ -260,31 +259,31 @@ namespace DnsClient
 				{
 					try
 					{
-						var recv = await _socket.ReceiveAsync(buffer, SocketFlags.None, ct);
+						var recv = (await _socket.ReceiveAsync()).Buffer;
 
 						if (ct.IsCancellationRequested)
 							break;
 
-						if (recv <= 0)
+						if (recv.Length <= 0)
 							continue;
 
-						if (recv < 12)
+						if (recv.Length < 12)
 						{
 							Options.ErrorLogging?.LogError("Received a malformed UDP response (too short).");
 							continue;
 						}
 
-						if ((buffer[2] & 0x80) == 0) //Received a query, not a response
+						if ((recv[2] & 0x80) == 0) //Received a query, not a response
 							continue;
 
-						ushort transactionId = BitConverter.ToUInt16(buffer, 0);
+						ushort transactionId = BitConverter.ToUInt16(recv, 0);
 						if (BitConverter.IsLittleEndian)
 							transactionId = BinaryPrimitives.ReverseEndianness(transactionId);
 
 						if (!_transactions.TryRemove(transactionId, out DnsQueryStatus? query) || query.IsComplete)
 							continue;
 
-						query.Parse(buffer, recv);
+						query.Parse(recv, recv.Length);
 					}
 					catch (OperationCanceledException)
 					{
@@ -302,7 +301,6 @@ namespace DnsClient
 			}
 			finally
 			{
-				ArrayPool<byte>.Shared.Return(buffer);
 				_socket.Close();
 			}
 		}
